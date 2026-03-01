@@ -64,3 +64,4 @@ temp/
 # prisma
 prisma/dev.db
 uploads/
+/app/generated/prisma
