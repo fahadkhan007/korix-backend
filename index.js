@@ -1,12 +1,16 @@
 import express from "express";
+import { PORT } from "./app/config/env.js"
 
 const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 
 app.get("/", (req, res) => {
     res.send("Hello World!");
 });
 
-app.listen(3000, () => {
-    console.log("Server started on port 3000");
+app.listen(PORT, () => {
+    console.log(`Server started on port http://localhost:${PORT}`);
 });
