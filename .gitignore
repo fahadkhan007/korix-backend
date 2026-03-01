@@ -59,3 +59,7 @@ temp/
 # Optional: local database files
 *.sqlite
 *.sqlite3
+
+# prisma
+prisma/dev.db
+uploads/
