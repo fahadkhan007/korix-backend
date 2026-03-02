@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import authRouter from './app/routers/auth.router.js';
 import { PORT } from './app/config/env.js';
@@ -14,7 +14,7 @@ app.use(cookieParser()); // Needed to read httpOnly cookies
 app.use('/api/auth', authRouter);
 
 // Health check
-app.get('/', (_req, res) => {
+app.get('/', (req: Request, res: Response) => {
     res.json({ message: 'Korix API is running 🚀' });
 });
 
