@@ -63,12 +63,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
         res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
 
-        const { password: _, ...userWithoutPassword } = user;
-
         res.status(201).json({
             message: 'Account created successfully',
             accessToken,
-            user: userWithoutPassword,
+            user,
         });
     } catch (err) {
         console.error('Register error:', err);
