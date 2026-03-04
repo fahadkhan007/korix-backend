@@ -2,19 +2,33 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { findUserByEmail, findUserById, createUser } from '../models/user.model.js';
-import { JWT_SECRET } from '../config/env.js';
+import { JWT_SECRET, JWT_REFRESH_SECRET } from '../config/env.js';
+import redisClient from '../database/redis.js';
 
-// Cookie config — httpOnly so JS can't touch it, secure in production
-const COOKIE_OPTIONS = {
+// ─── Cookie Configs ───────────────────────────────────────────────────────────
+
+// Refresh token cookie — long lived, httpOnly
+const REFRESH_COOKIE_OPTIONS = {
     httpOnly: true,
-    secure: false,
+    secure: false, // set true in production (HTTPS)
     sameSite: 'strict' as const,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
 };
 
+// ─── Token Generators ─────────────────────────────────────────────────────────
 
-const generateToken = (userId: string): string =>
-    jwt.sign({ userId }, JWT_SECRET!, { expiresIn: '7d' });
+// Short-lived: sent in response body, stored in memory on client
+const generateAccessToken = (userId: string): string =>
+    jwt.sign({ userId }, JWT_SECRET!, { expiresIn: '15m' });
+
+// Long-lived: stored in httpOnly cookie + Redis whitelist
+const generateRefreshToken = (userId: string): string =>
+    jwt.sign({ userId }, JWT_REFRESH_SECRET!, { expiresIn: '7d' });
+
+// Redis key pattern for refresh tokens
+const refreshKey = (userId: string) => `refresh:${userId}`;
+
+// ─── Controllers ──────────────────────────────────────────────────────────────
 
 // POST /api/auth/register
 export const register = async (req: Request, res: Response): Promise<void> => {
@@ -35,16 +49,26 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             res.status(409).json({ message: 'An account with this email already exists' });
             return;
         }
+
         const salt = await bcrypt.genSalt(12);
         const hashedPassword = await bcrypt.hash(password, salt);
         const user = await createUser({ email, name, password: hashedPassword });
 
-        const token = generateToken(user.id);
-        res.cookie('jwt', token, COOKIE_OPTIONS);
+        // Issue both tokens
+        const accessToken = generateAccessToken(user.id);
+        const refreshToken = generateRefreshToken(user.id);
+
+        // Store refresh token in Redis (7 days = 604800 seconds)
+        await redisClient.set(refreshKey(user.id), refreshToken, { EX: 604800 });
+
+        res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
+
+        const { password: _, ...userWithoutPassword } = user;
 
         res.status(201).json({
             message: 'Account created successfully',
-            user,
+            accessToken,
+            user: userWithoutPassword,
         });
     } catch (err) {
         console.error('Register error:', err);
@@ -64,7 +88,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
         const user = await findUserByEmail(email);
         if (!user) {
-            // Same message for both cases — don't leak which one failed
             res.status(401).json({ message: 'Invalid email or password' });
             return;
         }
@@ -75,19 +98,60 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const token = generateToken(user.id);
+        // Issue both tokens
+        const accessToken = generateAccessToken(user.id);
+        const refreshToken = generateRefreshToken(user.id);
 
-        // Strip password before sending response
+        // Store refresh token in Redis (7 days = 604800 seconds)
+        // This also replaces any previously stored token (single active session per user)
+        await redisClient.set(refreshKey(user.id), refreshToken, { EX: 604800 });
+
+        res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
+
         const { password: _, ...userWithoutPassword } = user;
 
-        res.cookie('jwt', token, COOKIE_OPTIONS);
         res.status(200).json({
             message: 'Login successful',
+            accessToken,
             user: userWithoutPassword,
         });
     } catch (err) {
         console.error('Login error:', err);
         res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+// POST /api/auth/refresh  — issues a new access token from the refresh token cookie
+export const refresh = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const token = (req.cookies as Record<string, string | undefined>)?.refresh_token;
+
+        if (!token) {
+            res.status(401).json({ message: 'No refresh token provided' });
+            return;
+        }
+
+        // Verify the refresh token signature
+        const decoded = jwt.verify(token, JWT_REFRESH_SECRET!) as { userId: string };
+
+        // Check Redis — token must still be in the whitelist
+        const stored = await redisClient.get(refreshKey(decoded.userId));
+        if (!stored || stored !== token) {
+            res.status(401).json({ message: 'Refresh token is invalid or has been revoked' });
+            return;
+        }
+
+        // Rotate: issue a fresh refresh token and update Redis
+        const newAccessToken = generateAccessToken(decoded.userId);
+        const newRefreshToken = generateRefreshToken(decoded.userId);
+
+        await redisClient.set(refreshKey(decoded.userId), newRefreshToken, { EX: 604800 });
+        res.cookie('refresh_token', newRefreshToken, REFRESH_COOKIE_OPTIONS);
+
+        res.status(200).json({ accessToken: newAccessToken });
+    } catch (err) {
+        console.error('Refresh error:', err);
+        res.status(401).json({ message: 'Unauthorized: Invalid or expired refresh token' });
     }
 };
 
@@ -107,7 +171,17 @@ export const profile = async (req: Request, res: Response): Promise<void> => {
 };
 
 // POST /api/auth/logout  — protected
-export const logout = (_req: Request, res: Response): void => {
-    res.clearCookie('jwt', COOKIE_OPTIONS);
-    res.status(200).json({ message: 'Logged out successfully' });
+export const logout = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = (req as any).userId as string;
+
+        // Revoke the refresh token from Redis — now it's dead even if the cookie is stolen
+        await redisClient.del(refreshKey(userId));
+
+        res.clearCookie('refresh_token', REFRESH_COOKIE_OPTIONS);
+        res.status(200).json({ message: 'Logged out successfully' });
+    } catch (err) {
+        console.error('Logout error:', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 };

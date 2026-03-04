@@ -6,10 +6,12 @@ interface JwtPayload {
     userId: string;
 }
 
-// Reads the JWT from the httpOnly cookie and attaches userId to the request
+// Reads the short-lived access token from the Authorization header
+// Expected format: "Authorization: Bearer <accessToken>"
 export const protect = (req: Request, res: Response, next: NextFunction): void => {
     try {
-        const token = (req.cookies as Record<string, string | undefined>)?.jwt;
+        const authHeader = req.headers['authorization'];
+        const token = authHeader?.split(' ')[1]; // "Bearer <token>"
 
         if (!token) {
             res.status(401).json({ message: 'Unauthorized: No token provided' });

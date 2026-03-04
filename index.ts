@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import authRouter from './app/routers/auth.router.js';
 import { PORT } from './app/config/env.js';
+import { connectRedis } from './app/database/redis.js';
 
 const app = express();
 
@@ -19,6 +20,12 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 const port = Number(PORT) || 8000;
-app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-});
+
+const startServer = async () => {
+    await connectRedis();
+    app.listen(port, () => {
+        console.log(`Server running on http://localhost:${port}`);
+    });
+};
+
+startServer();
