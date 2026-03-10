@@ -1,16 +1,18 @@
 import { Router } from 'express';
 import { register, login, refresh, profile, logout } from '../controllers/auth.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
+import { ipRateLimiter, userRateLimiter } from '../middlewares/ratelimit.middleware.js';
+
 
 const router = Router();
 
-// Public routes
-router.post('/register', register);
-router.post('/login', login);
-router.post('/refresh', refresh); // uses httpOnly cookie, no protect middleware needed
 
-// Protected routes (require valid access token in Authorization header)
-router.get('/profile', protect, profile);
-router.post('/logout', protect, logout);
+router.post('/register', ipRateLimiter, register);
+router.post('/login', ipRateLimiter, login);
+router.post('/refresh', ipRateLimiter, refresh); 
+
+
+router.get('/profile', protect, userRateLimiter, profile);
+router.post('/logout', protect, userRateLimiter, logout);
 
 export default router;

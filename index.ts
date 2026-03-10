@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import authRouter from './app/routers/auth.router.js';
 import { PORT } from './app/config/env.js';
 import { connectRedis } from './app/database/redis.js';
+import { connectRedisRateLimit } from './app/config/ratelimitRedis.js';
 import errorMiddleware from './app/middlewares/error.middleware.js';
 
 const app: Application = express();
@@ -23,6 +24,7 @@ const port = Number(PORT) || 8000;
 
 const startServer = async () => {
     await connectRedis();
+    await connectRedisRateLimit();
     app.listen(port, () => {
         console.log(`Server running on http://localhost:${port}`);
     });
