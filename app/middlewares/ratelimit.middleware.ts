@@ -1,7 +1,13 @@
-import { Request, Response, NextFunction } from "express";
+import { Request } from "express";
 import { rateLimit } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
 import redisRateLimit from "../config/ratelimitRedis.js";
+
+const makeRedisStore = (prefix: string) =>
+    new RedisStore({
+        sendCommand: (...args: string[]) => (redisRateLimit as any).sendCommand(args),
+        prefix,
+    });
 
 
 const ipRateLimiter = rateLimit({
@@ -14,15 +20,8 @@ const ipRateLimiter = rateLimit({
         statusCode: 429,
         message: "Too many requests from this IP. Please try again after 15 minutes.",
     },
-    store: new RedisStore({
-        sendCommand: (...args: string[]) => (redisRateLimit as any).sendCommand(args),
-        prefix: "ratelimit:ip:",
-    }),
-    keyGenerator: (req: Request): string => {
-        return req.ip ?? req.socket.remoteAddress ?? "unknown";
-    },
+    store: makeRedisStore("ratelimit:ip:"),
 });
-
 
 const userRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -34,12 +33,9 @@ const userRateLimiter = rateLimit({
         statusCode: 429,
         message: "Too many requests. Please slow down.",
     },
-    store: new RedisStore({
-        sendCommand: (...args: string[]) => (redisRateLimit as any).sendCommand(args),
-        prefix: "ratelimit:user:",
-    }),
+    store: makeRedisStore("ratelimit:user:"),
     keyGenerator: (req: Request): string => {
-        return (req as any).userId ?? req.ip ?? "unknown";
+        return (req as any).userId || "unknown";
     },
     skip: (req: Request): boolean => {
         return !(req as any).userId;
