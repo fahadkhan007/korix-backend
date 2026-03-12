@@ -5,6 +5,7 @@ import { findUserByEmail, findUserById, createUser } from '../models/user.model.
 import { JWT_SECRET, JWT_REFRESH_SECRET } from '../config/env.js';
 import redisClient from '../database/redis.js';
 import { prisma } from '../database/database.js';
+import sendEmail from '../utils/sendmail.utils.js';
 
 
 const REFRESH_COOKIE_OPTIONS = {
@@ -22,6 +23,19 @@ const generateRefreshToken = (userId: string): string =>
 
 const refreshKey = (userId: string) => `refresh:${userId}`;
 
+
+const welcomeEmailTemplate = `
+<!DOCTYPE html>
+<html>
+  <body style="font-family: Arial, sans-serif; background:#f4f6f8; padding:20px;">
+    <div style="background:#ffffff; padding:30px; border-radius:8px; max-width:500px; margin:auto;">
+      <h2>Hi 👋</h2>
+      <p>Your account has been successfully registered.</p>
+      <p>Welcome to the app! 🚀</p>
+    </div>
+  </body>
+</html>
+`;
 
 export const register = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -72,6 +86,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         const refreshToken = generateRefreshToken(user.id);
 
         await redisClient.set(refreshKey(user.id), refreshToken, { EX: 604800 });
+        await sendEmail(user.email, 'Welcome to Korix', welcomeEmailTemplate);
+        console.log(`Sent welcome email to ${user.email}`);
 
         res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
 
