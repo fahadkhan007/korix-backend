@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { findUserByEmail, findUserById, createUser } from '../models/user.model.js';
 import { JWT_SECRET, JWT_REFRESH_SECRET } from '../config/env.js';
 import redisClient from '../database/redis.js';
+import { prisma } from '../database/database.js';
 
 
 const REFRESH_COOKIE_OPTIONS = {
@@ -43,7 +44,29 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
         const salt = await bcrypt.genSalt(12);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const user = await createUser({ email, name, password: hashedPassword });
+
+        // Atomically create user + personal workspace
+        const { user, personalOrg } = await prisma.$transaction(async (tx) => {
+            const user = await tx.user.create({
+                data: { email, name, password: hashedPassword },
+                select: { id: true, email: true, name: true, role: true, createdAt: true },
+            });
+
+            const slug = `personal-${user.id}`;
+            const personalOrg = await tx.organisation.create({
+                data: {
+                    name: `${name}'s Workspace`,
+                    slug,
+                    isPersonal: true,
+                    ownerId: user.id,
+                    members: {
+                        create: { userId: user.id, role: 'OWNER' },
+                    },
+                },
+            });
+
+            return { user, personalOrg };
+        });
 
         const accessToken = generateAccessToken(user.id);
         const refreshToken = generateRefreshToken(user.id);
@@ -56,6 +79,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             message: 'Account created successfully',
             accessToken,
             user,
+            personalOrg,
         });
     } catch (err) {
         console.error('Register error:', err);
