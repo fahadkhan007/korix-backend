@@ -9,7 +9,8 @@ const router = Router();
 
 router.post('/register', ipRateLimiter, register);
 router.post('/login', ipRateLimiter, login);
-router.post('/refresh', ipRateLimiter, refresh); 
+router.post('/refresh', ipRateLimiter, refresh);
+// router.post('verify-email/:token', )
 
 
 router.get('/profile', protect, userRateLimiter, profile);
