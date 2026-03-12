@@ -30,6 +30,7 @@ model User {
   assignedTasks      Task[]         @relation("TaskAssignee")
   reportedTasks      Task[]         @relation("TaskReporter")
   sentInvites        OrgInvite[]    @relation("InviteSender")
+  emailVerificationToken EmailVerificationToken?
 }
 
 // ─────────────────────────────────────────────
@@ -163,6 +164,20 @@ model OrgInvite {
   @@index([tokenHash])
   @@index([email])
 }
+
+//-------------------------------
+//email vertification token model
+//-------------------------------
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 
 // ─────────────────────────────────────────────
 // ENUMS
