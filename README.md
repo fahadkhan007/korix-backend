@@ -137,7 +137,7 @@ Server runs at `http://localhost:8000` by default.
 | Redis refresh token storage + rotation | ✅ Complete |
 | Global error handling | ✅ Complete |
 | Rate limiting (IP + user-based) | ✅ Complete |
-| Email verification | 🔲 Planned |
-| CORS configuration | 🔲 Planned |
+| Email verification | ✅ Complete |
+| CORS configuration | ✅ Complete |
 | Project management features | 🔲 Planned |
 | Team / collaboration features | 🔲 Planned |
