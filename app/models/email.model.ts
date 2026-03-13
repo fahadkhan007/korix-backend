@@ -29,3 +29,18 @@ export const deleteEmailVerificationToken = async (userId: string) => {
         where: { userId },
     });
 };
+
+export const findEmailVerificationToken = async (token: string)=>{
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    
+    return prisma.emailVerificationToken.findFirst({
+        where: { tokenHash },
+        select: {
+            id: true,
+            userId: true,
+            tokenHash: true,
+            expiresAt: true,
+            createdAt: true,
+        },
+    })
+}

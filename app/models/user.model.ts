@@ -7,7 +7,7 @@ export const findUserByEmail = async (email: string) => {
 export const findUserById = async (id: string) => {
     return prisma.user.findUnique({
         where: { id },
-        select: { id: true, email: true, name: true, role: true, createdAt: true },
+        select: { id: true, email: true, name: true, role: true, createdAt: true, isVerified: true },
     });
 };
 
@@ -17,3 +17,10 @@ export const createUser = async (data: { email: string; name: string; password: 
         select: { id: true, email: true, name: true, role: true, createdAt: true },
     });
 };
+
+export const verifyUserEmail = async (userId: string)=>{
+    return prisma.user.update({
+        where: { id: userId},
+        data: { isVerified: true },
+    })
+}
