@@ -7,14 +7,14 @@ export const findUserByEmail = async (email: string) => {
 export const findUserById = async (id: string) => {
     return prisma.user.findUnique({
         where: { id },
-        select: { id: true, email: true, name: true, role: true, createdAt: true, isVerified: true },
+        select: { id: true, email: true, name: true, isVerified: true, createdAt: true },
     });
 };
 
 export const createUser = async (data: { email: string; name: string; password: string }) => {
     return prisma.user.create({
         data,
-        select: { id: true, email: true, name: true, role: true, createdAt: true },
+        select: { id: true, email: true, name: true, createdAt: true },
     });
 };
 

@@ -1,6 +1,7 @@
 import express, { Request, Response, Application } from 'express';
 import cookieParser from 'cookie-parser';
 import authRouter from './app/routers/auth.router.js';
+import projectRouter from './app/routers/project.router.js';
 import { PORT, FRONTEND_CLIENT_URL } from './app/config/env.js';
 import { connectRedis } from './app/database/redis.js';
 import { connectRedisRateLimit } from './app/config/ratelimitRedis.js';
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use('/api/auth', authRouter);
+app.use('/api/projects', projectRouter);
 
 app.get('/', (req: Request, res: Response) => {
     const htmlResponse = `
