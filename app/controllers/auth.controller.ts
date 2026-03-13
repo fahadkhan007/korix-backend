@@ -33,23 +33,97 @@ export const createEmailVerificationToken = async () =>{
 export const getVerificationEmailTemplate = (name: string, verificationUrl: string) => `
 <!DOCTYPE html>
 <html>
-  <body style="font-family: Arial, sans-serif; background:#f4f6f8; padding:20px;">
-    <div style="background:#ffffff; padding:30px; border-radius:8px; max-width:500px; margin:auto;">
-      <h2>Verify your email</h2>
-      <p>Hi ${name},</p>
-      <p>Click the button below to verify your Korix account.</p>
-      <p style="margin: 24px 0;">
-        <a
-          href="${verificationUrl}"
-          style="background:#111827; color:#ffffff; text-decoration:none; padding:12px 20px; border-radius:6px; display:inline-block;"
-        >
-          Verify Email
-        </a>
-      </p>
-      <p>If the button does not work, use this link:</p>
-      <p><a href="${verificationUrl}">${verificationUrl}</a></p>
-    </div>
-  </body>
+<head>
+<meta charset="UTF-8">
+<title>Verify your email</title>
+</head>
+
+<body style="margin:0; padding:0; background:#f5f7fb; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
+    <tr>
+      <td align="center">
+
+        <table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:12px; padding:40px; box-shadow:0 4px 20px rgba(0,0,0,0.05);">
+
+          <tr>
+            <td align="center" style="padding-bottom:20px;">
+              <h1 style="margin:0; font-size:26px; color:#111827;">Korix</h1>
+              <p style="margin:6px 0 0; color:#6b7280; font-size:14px;">
+                Project Management & Collaboration
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top:10px;">
+              <h2 style="color:#111827; font-size:20px; margin-bottom:10px;">
+                Verify your email
+              </h2>
+
+              <p style="color:#374151; font-size:15px; line-height:1.6;">
+                Hi <strong>${name}</strong>,
+              </p>
+
+              <p style="color:#374151; font-size:15px; line-height:1.6;">
+                Welcome to <strong>Korix</strong>. Please confirm your email address to activate your account and start managing your projects with your team.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding:30px 0;">
+              <a
+                href="${verificationUrl}"
+                style="
+                  background:#4f46e5;
+                  color:#ffffff;
+                  text-decoration:none;
+                  padding:14px 26px;
+                  font-size:15px;
+                  border-radius:8px;
+                  font-weight:600;
+                  display:inline-block;
+                "
+              >
+                Verify Email
+              </a>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <p style="color:#6b7280; font-size:14px;">
+                If the button above doesn't work, copy and paste this link into your browser:
+              </p>
+
+              <p style="word-break:break-all;">
+                <a href="${verificationUrl}" style="color:#4f46e5; font-size:13px;">
+                  ${verificationUrl}
+                </a>
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top:30px; border-top:1px solid #e5e7eb;">
+              <p style="font-size:12px; color:#9ca3af; line-height:1.5;">
+                If you didn’t create a Korix account, you can safely ignore this email.
+              </p>
+
+              <p style="font-size:12px; color:#9ca3af;">
+                © ${new Date().getFullYear()} Korix. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
 </html>
 `;
 
