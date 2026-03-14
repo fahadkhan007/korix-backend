@@ -104,34 +104,7 @@ export const getMemberRoleController = async (req: Request, res: Response): Prom
     }
 };
 
-export const addProjectMemberController = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { projectId } = req.params as Record<string, string>;
-        const { userId: targetUserId, role } = req.body as { userId: string; role: ProjectRole };
 
-        // Validate role
-        const validRoles = [ProjectRole.ADMIN, ProjectRole.MEMBER, ProjectRole.VIEWER];
-        if (!targetUserId || !role || !validRoles.includes(role)) {
-            res.status(400).json({ message: 'Valid userId and role (ADMIN, MEMBER, VIEWER) are required' });
-            return;
-        }
-
-        // Verify if the user to be added exists
-        const user = await findUserById(targetUserId);
-        if (!user) {
-            res.status(404).json({ message: 'User not found' });
-            return;
-        }
-
-        // Add the member
-        const member = await addProjectMember({ projectId, userId: targetUserId, role });
-
-        res.status(201).json({ message: 'Member added successfully', member });
-    } catch (err) {
-        console.error('addProjectMember error:', err);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
 export const updateProjectMemberRoleController = async (req: Request, res: Response): Promise<void> => {
     try {
         const { projectId } = req.params as Record<string, string>;
@@ -158,4 +131,3 @@ export const getSubProjectsController = async (req: Request, res: Response): Pro
         res.status(500).json({ message: 'Internal server error' });
     }
 };
-    
