@@ -1,5 +1,5 @@
 import { prisma } from '../database/database.js';
-import { ProjectRole } from '../generated/prisma/enums.js';
+import { ConversationType, ProjectRole } from '../generated/prisma/enums.js';
 
 export const createProject = async (data: {
     name: string;
@@ -22,6 +22,14 @@ export const createProject = async (data: {
                 projectId: project.id,
                 userId: data.createdById,
                 role: ProjectRole.ADMIN,
+            },
+        });
+
+        await tx.conversation.create({
+            data: {
+                projectId: project.id,
+                name: 'General',
+                type: ConversationType.PROJECT,
             },
         });
 
