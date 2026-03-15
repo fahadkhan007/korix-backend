@@ -12,10 +12,11 @@ import crypto from 'crypto';
 
 const REFRESH_COOKIE_OPTIONS = {
     httpOnly: true,
-    secure: false, 
-    sameSite: 'strict' as const,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const,
     maxAge: 7 * 24 * 60 * 60 * 1000,
 };
+
 
 const generateAccessToken = (userId: string): string =>
     jwt.sign({ userId }, JWT_SECRET!, { expiresIn: '15m' });
