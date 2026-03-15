@@ -12,7 +12,7 @@ import cors from 'cors';
 const app: Application = express();
 
 app.use(cors({
-    origin: FRONTEND_CLIENT_URL,
+    origin: '*',//FRONTEND_CLIENT_URL,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
