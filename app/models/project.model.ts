@@ -1,4 +1,5 @@
 import { prisma } from '../database/database.js';
+import { Prisma } from '../generated/prisma/client.js';
 import { ConversationType, ProjectRole } from '../generated/prisma/enums.js';
 
 export const createProject = async (data: {
@@ -7,7 +8,7 @@ export const createProject = async (data: {
     parentId?: string;
     createdById: string;
 }) => {
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const project = await tx.project.create({
             data: {
                 name: data.name,

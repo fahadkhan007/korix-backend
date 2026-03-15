@@ -3,6 +3,8 @@ import { Prisma } from "../generated/prisma/client.js";
 
 interface AppError extends Error {
     statusCode?: number;
+    code?: string;
+    meta?: Record<string, unknown>;
 }
 
 const errorMiddleware = (err: AppError, req: Request, res: Response, next: NextFunction): void => {
