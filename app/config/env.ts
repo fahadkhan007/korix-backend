@@ -10,6 +10,7 @@ export const {
     FRONTEND_CLIENT_URL,
     BACKEND_CLIENT_URL,
     SMTP_KEY, SMTP_LOGIN,
+    SMTP_FROM,
     SMTP_SERVER,
     SMTP_PORT
 } = process.env;
