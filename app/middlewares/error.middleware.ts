@@ -9,6 +9,11 @@ interface AppError extends Error {
 
 const errorMiddleware = (err: AppError, req: Request, res: Response, next: NextFunction): void => {
     try {
+        if (res.headersSent) {
+            next(err);
+            return;
+        }
+
         let statusCode: number = err.statusCode || 500;
         let message: string = err.message || "Internal Server Error";
         console.error(`[Error] ${req.method} ${req.path} →`, err);
@@ -50,6 +55,10 @@ const errorMiddleware = (err: AppError, req: Request, res: Response, next: NextF
             message,
         });
     } catch (error) {
+        if (res.headersSent) {
+            next(error);
+            return;
+        }
         next(error);
     }
 };

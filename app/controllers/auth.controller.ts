@@ -279,6 +279,9 @@ export const profile = async (req: Request, res: Response): Promise<void> => {
         res.status(200).json({ user });
     } catch (err) {
         console.error('Profile error:', err);
+        if (res.headersSent) {
+            return;
+        }
         res.status(500).json({ message: 'Internal server error' });
     }
 };

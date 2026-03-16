@@ -8,17 +8,26 @@ const verifyEmailMiddleware = async (req: Request, res: Response, next: NextFunc
         if(!user){
             res.status(404).json({
                 message: "user not found"
-            })
-        }else if(!user.isVerified){
+            });
+            return;
+        }
+
+        if(!user.isVerified){
             res.status(401).json({
                 message: "user not verified"
-            })
+            });
+            return;
         }
+
         next();
     }catch(err){
+        if (res.headersSent) {
+            return;
+        }
+
         res.status(500).json({
             message: "internal server error"
-        })
+        });
     }
 }
 

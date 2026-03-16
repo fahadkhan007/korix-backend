@@ -82,6 +82,9 @@ export const getProjectsByUserController = async (req: Request, res: Response): 
         res.status(200).json({ projects });
     } catch (err) {
         console.error('getProjectsByUser error:', err);
+        if (res.headersSent) {
+            return;
+        }
         res.status(500).json({ message: 'Internal server error' });
     }
 };
