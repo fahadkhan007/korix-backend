@@ -5,12 +5,9 @@ import {
     findProjectById,
     findProjectsByUser,
     findMemberRole,
-    addProjectMember,
     updateProjectMemberRole,
-    removeProjectMember,
     findSubProjects,
 } from '../models/project.model.js';
-import { findUserById } from '../models/user.model.js';
 
 export const createProjectController = async (req: Request, res: Response): Promise<void> => {
     try {

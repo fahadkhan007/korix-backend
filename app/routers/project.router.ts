@@ -13,6 +13,7 @@ import {
     getSubProjectsController
 } from '../controllers/project.controller.js';
 import { inviteMemberController, acceptProjectInviteController } from '../controllers/invitemember.controller.js';
+import taskRouter from './task.router.js';
 
 const router = Router();
 
@@ -34,5 +35,6 @@ router.patch('/:projectId/members', requireProjectRole(ProjectRole.ADMIN), updat
 router.get('/:projectId/subprojects', requireProjectRole(ProjectRole.ADMIN, ProjectRole.MEMBER, ProjectRole.VIEWER), getSubProjectsController);
 
 router.post('/:projectId/subprojects', requireProjectRole(ProjectRole.ADMIN), createSubProjectController);
+router.use('/:projectId/tasks', taskRouter);
 
 export default router;

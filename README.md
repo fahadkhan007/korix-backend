@@ -1,143 +1,142 @@
-# Korix — Backend API
+# Korix Backend
 
-Korix is a **project management and collaboration platform**. This repository contains the backend REST API built with Node.js, Express, TypeScript, PostgreSQL (via Prisma), and Redis.
+Backend API for **Korix**, a project collaboration platform with authentication, project management, team invites, subprojects, and task workflows.
 
----
+## Live Links
 
-## Tech Stack
+- Frontend: https://korix-frontend.vercel.app/
+- Backend API: https://korix-backend.onrender.com/api
 
-| Layer | Technology |
-|---|---|
-| Runtime | Node.js + TypeScript |
-| Framework | Express v5 |
-| ORM | Prisma v7 (with `@prisma/adapter-pg`) |
-| Database | PostgreSQL |
-| Cache / Sessions | Redis |
-| Auth | JWT (access + refresh tokens) |
-| Password Hashing | bcryptjs |
-| Rate Limiting | express-rate-limit + rate-limit-redis |
+## What This Service Handles
 
----
+- JWT auth with access and refresh tokens
+- Email verification and resend verification flow
+- Redis-backed refresh token storage
+- Rate limiting with Redis
+- Project creation and project listing
+- Role-based project access
+- Member invitations and invite acceptance
+- Subproject creation
+- Task creation, assignment, update, and deletion
+
+## Stack
+
+- Node.js
+- TypeScript
+- Express 5
+- Prisma
+- PostgreSQL
+- Redis
+- JWT
+- Nodemailer
+
+## Main API Areas
+
+### Auth
+
+Base path: `/api/auth`
+
+- `POST /register`
+- `POST /login`
+- `POST /refresh`
+- `GET /verify-email`
+- `GET /profile`
+- `POST /logout`
+- `POST /resend-verification`
+
+### Projects
+
+Base path: `/api/projects`
+
+- `POST /`
+- `GET /`
+- `GET /:projectId`
+- `GET /:projectId/role`
+- `POST /:projectId/members`
+- `PATCH /:projectId/members`
+- `GET /:projectId/subprojects`
+- `POST /:projectId/subprojects`
+- `POST /invites/accept`
+
+### Tasks
+
+Project-scoped task routes:
+
+- `POST /api/projects/:projectId/tasks`
+- `GET /api/projects/:projectId/tasks`
+- `GET /api/projects/:projectId/tasks/:taskId`
+- `PATCH /api/projects/:projectId/tasks/:taskId`
+- `DELETE /api/projects/:projectId/tasks/:taskId`
 
 ## Project Structure
 
-```
+```text
 backend/
-├── index.ts                        # App entry point
+├── index.ts
 ├── prisma/
-│   └── schema.prisma               # Database schema
+│   ├── schema.prisma
+│   └── migrations/
 └── app/
     ├── config/
-    │   ├── env.ts                  # Environment variable exports
-    │   └── ratelimitRedis.ts       # Dedicated Redis client for rate limiting (DB 2)
     ├── controllers/
-    │   └── auth.controller.ts      # Register, login, refresh, profile, logout
     ├── database/
-    │   ├── database.ts             # Prisma client
-    │   └── redis.ts                # Redis client for auth tokens (DB 1)
     ├── middlewares/
-    │   ├── auth.middleware.ts      # JWT access token verification (protect)
-    │   ├── error.middleware.ts     # Global error handler
-    │   └── ratelimit.middleware.ts # IP-based and user-based rate limiters
     ├── models/
-    │   └── user.model.ts           # Prisma user query helpers
-    └── routers/
-        └── auth.router.ts          # Auth route definitions
+    ├── routers/
+    ├── templates/
+    └── utils/
 ```
-
----
 
 ## Environment Variables
 
-Create a `.env` file in the `backend/` root:
+Create a `.env` file in `backend/`.
 
 ```env
 PORT=8000
+FRONTEND_CLIENT_URL=http://localhost:5173
+BACKEND_CLIENT_URL=http://localhost:8000
 DATABASE_URL=postgresql://username:password@localhost:5432/korix
+REDIS_URL=redis://localhost:6379
 JWT_SECRET=your_jwt_secret
 JWT_REFRESH_SECRET=your_jwt_refresh_secret
-REDIS_URL=redis://localhost:6379
+SMTP_KEY=your_smtp_key
+SMTP_LOGIN=your_smtp_login
+SMTP_FROM=your_from_email
+SMTP_SERVER=your_smtp_server
+SMTP_PORT=587
 ```
 
----
-
-## API Endpoints
-
-### Auth — `/api/auth`
-
-| Method | Endpoint | Auth | Rate Limit | Description |
-|---|---|---|---|---|
-| `POST` | `/register` | ❌ Public | IP (10/15min) | Create a new account |
-| `POST` | `/login` | ❌ Public | IP (10/15min) | Login and receive tokens |
-| `POST` | `/refresh` | ❌ Public (cookie) | IP (10/15min) | Rotate refresh token, get new access token |
-| `GET` | `/profile` | ✅ Bearer token | User (60/15min) | Get authenticated user's profile |
-| `POST` | `/logout` | ✅ Bearer token | User (60/15min) | Revoke refresh token and clear cookie |
-
----
-
-## Auth System
-
-- **Access Token** — short-lived (15 minutes), sent in response body, used via `Authorization: Bearer <token>` header
-- **Refresh Token** — long-lived (7 days), stored in an `httpOnly` cookie, validated against Redis
-- **Token Rotation** — every `/refresh` call issues a new refresh token and invalidates the old one
-- Refresh tokens are stored in **Redis DB 1** under the key `refresh:<userId>`
-
----
-
-## Rate Limiting
-
-Two rate limiters, both backed by **Redis DB 2**:
-
-| Limiter | Key | Limit | Applied to |
-|---|---|---|---|
-| `ipRateLimiter` | Client IP | 10 req / 15 min | `/register`, `/login`, `/refresh` |
-| `userRateLimiter` | User ID (from JWT) | 60 req / 15 min | `/profile`, `/logout` |
-
----
-
-## Error Handling
-
-A global error middleware catches and normalizes all errors:
-
-| Error Type | Status |
-|---|---|
-| Prisma unique constraint (`P2002`) | `409 Conflict` |
-| Prisma record not found (`P2025`) | `404 Not Found` |
-| Prisma foreign key violation (`P2003`) | `400 Bad Request` |
-| Prisma validation error | `400 Bad Request` |
-| `JsonWebTokenError` | `401 Unauthorized` |
-| `TokenExpiredError` | `401 Unauthorized` |
-| Unhandled errors | `500 Internal Server Error` |
-
----
-
-## Getting Started
+## Local Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Run database migrations
+npm run generate
 npx prisma migrate dev
-
-# Start dev server
 npm run dev
 ```
 
-Server runs at `http://localhost:8000` by default.
+The API runs on `http://localhost:8000`.
 
----
+## Build
+
+```bash
+npm run build
+npm start
+```
+
+Note: Prisma generate requires `DATABASE_URL` to be available in the environment.
 
 ## Current Status
 
-| Feature | Status |
-|---|---|
-| Auth (register / login / logout) | ✅ Complete |
-| JWT access + refresh token flow | ✅ Complete |
-| Redis refresh token storage + rotation | ✅ Complete |
-| Global error handling | ✅ Complete |
-| Rate limiting (IP + user-based) | ✅ Complete |
-| Email verification | ✅ Complete |
-| CORS configuration | ✅ Complete |
-| Project management features | 🔲 Planned |
-| Team / collaboration features | 🔲 Planned |
+- Auth flow is implemented
+- Email verification is implemented
+- Project and member flows are implemented
+- Task backend API is implemented
+- Frontend is already consuming this backend
+- AI-driven task generation is planned for a future phase
+
+## Notes
+
+- Refresh tokens are stored in Redis
+- Role checks are enforced at the project level
+- Task assignment is restricted to existing project members
