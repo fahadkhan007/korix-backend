@@ -7,6 +7,8 @@ import { getVerificationEmailTemplate } from './auth.controller.js';
 import sendResendEmail from '../utils/resendmail.utils.js';
 import { BACKEND_CLIENT_URL } from '../config/env.js';
 
+const getBackendBaseUrl = () => (BACKEND_CLIENT_URL ?? '').replace(/\/+$/, '');
+
 export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
     try {
         const token = typeof req.query.token === 'string' ? req.query.token : undefined;
@@ -72,7 +74,7 @@ export const resendVerificationEmail = async (req: Request, res: Response): Prom
             token: newToken,
             expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         });
-        const verificationUrl = `${BACKEND_CLIENT_URL}/api/auth/verify-email?token=${newToken}`;
+        const verificationUrl = `${getBackendBaseUrl()}/api/auth/verify-email?token=${newToken}`;
         const template= getVerificationEmailTemplate(user.name ?? "there",verificationUrl);
         res.status(200).json({
             message: 'Verification email sent successfully',

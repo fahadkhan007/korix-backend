@@ -25,6 +25,7 @@ const generateRefreshToken = (userId: string): string =>
     jwt.sign({ userId }, JWT_REFRESH_SECRET!, { expiresIn: '7d' });
 
 const refreshKey = (userId: string) => `refresh:${userId}`;
+const getBackendBaseUrl = () => (BACKEND_CLIENT_URL ?? '').replace(/\/+$/, '');
 
 export const createEmailVerificationToken = async () =>{
     const token = crypto.randomBytes(32).toString('hex');
@@ -169,7 +170,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         });
 
-        const verificationUrl = `${BACKEND_CLIENT_URL}/api/auth/verify-email?token=${emailToken}`;
+        const verificationUrl = `${getBackendBaseUrl()}/api/auth/verify-email?token=${emailToken}`;
 
         res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
         res.status(201).json({
