@@ -3,7 +3,6 @@ import { register, login, refresh, profile, logout } from '../controllers/auth.c
 import { protect } from '../middlewares/auth.middleware.js';
 import { ipRateLimiter, userRateLimiter } from '../middlewares/ratelimit.middleware.js';
 import { verifyEmail, resendVerificationEmail } from '../controllers/emailverify.controller.js';
-import { verifyEmailMiddleware } from '../middlewares/verified.middleware.js';
 
 
 
@@ -16,7 +15,7 @@ router.post('/refresh', ipRateLimiter, refresh);
 router.get('/verify-email', ipRateLimiter, verifyEmail);
 
 
-router.get('/profile', protect,verifyEmailMiddleware, userRateLimiter, profile);
+router.get('/profile', protect, userRateLimiter, profile);
 router.post('/logout', protect, userRateLimiter, logout);
 router.post('/resend-verification', protect, userRateLimiter, resendVerificationEmail);
 
