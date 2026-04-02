@@ -5,7 +5,7 @@ import { createProjectInvite, findPendingInvite, findProjectInviteByToken, updat
 import crypto from "crypto";
 import { findProjectById } from "../models/project.model.js";
 import { findMemberRole, addProjectMember } from "../models/project.model.js";
-import sendEmail from "../utils/sendmail.utils.js";
+import sendResendEmail from "../utils/resendmail.utils.js";
 import getInviteTemplate from "../templates/invitetemplate.js";
 import getRegisterInviteTemplate from "../templates/register.invite.js";
 
@@ -58,13 +58,13 @@ export const inviteMemberController = async (req: Request, res: Response): Promi
         if (!existingUser) {
             const inviteUrl = `http://localhost:5173/register?token=${rawToken}`;
             const htmlContent = getRegisterInviteTemplate(email.split('@')[0], project.name, inviteUrl);
-            sendEmail(email, `Please register your account to join ${project.name} on Korix!`, htmlContent)
+            sendResendEmail(email, `Please register your account to join ${project.name} on Korix!`, htmlContent)
                 .catch((err) => console.error('Failed to send invite email asynchronously:', err));
         } else {
             const inviteeName = (existingUser && existingUser.name) ? existingUser.name : email.split('@')[0];
             const inviteUrl = `http://localhost:5173/projects/join?token=${rawToken}`;
             const htmlContent = getInviteTemplate(inviteeName, project.name, inviteUrl);
-            sendEmail(email, `Invitation to join ${project.name} on Korix!`, htmlContent)
+            sendResendEmail(email, `Invitation to join ${project.name} on Korix!`, htmlContent)
                 .catch((err) => console.error('Failed to send invite email asynchronously:', err));
         }
 

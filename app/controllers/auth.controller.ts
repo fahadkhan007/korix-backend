@@ -5,7 +5,7 @@ import { findUserByEmail, findUserById } from '../models/user.model.js';
 import { JWT_SECRET, JWT_REFRESH_SECRET, BACKEND_CLIENT_URL } from '../config/env.js';
 import redisClient from '../database/redis.js';
 import { prisma } from '../database/database.js';
-import sendEmail from '../utils/sendmail.utils.js';
+import sendResendEmail from '../utils/resendmail.utils.js';
 import { saveEmailVerificationToken, deleteEmailVerificationToken } from '../models/email.model.js';
 import crypto from 'crypto';
 
@@ -180,7 +180,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
         setImmediate(async () => {
             try {
-                await sendEmail(
+                await sendResendEmail(
                     user.email,
                     'Verify your Korix email',
                     getVerificationEmailTemplate(user.name ?? 'there', verificationUrl),

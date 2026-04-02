@@ -4,7 +4,7 @@ import { verifyUserEmail } from '../models/user.model.js';
 import { createEmailVerificationToken } from './auth.controller.js';
 import { findUserById } from '../models/user.model.js';
 import { getVerificationEmailTemplate } from './auth.controller.js';
-import sendEmail from '../utils/sendmail.utils.js';
+import sendResendEmail from '../utils/resendmail.utils.js';
 import { BACKEND_CLIENT_URL } from '../config/env.js';
 
 export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
@@ -79,7 +79,7 @@ export const resendVerificationEmail = async (req: Request, res: Response): Prom
         })
         setImmediate(async () => {
             try {
-                await sendEmail(
+                await sendResendEmail(
                     user.email,
                     'Verify your Korix email',
                     template

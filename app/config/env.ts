@@ -12,5 +12,7 @@ export const {
     SMTP_KEY, SMTP_LOGIN,
     SMTP_FROM,
     SMTP_SERVER,
-    SMTP_PORT
+    SMTP_PORT,
+    RESEND_API_KEY,
+    RESEND_FROM_EMAIL
 } = process.env;
