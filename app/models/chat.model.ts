@@ -8,6 +8,13 @@ export const findConversationByProject = async (projectId: string) => {
     });
 };
 
+export const findConversationById = async (id: string) => {
+    return prisma.conversation.findUnique({
+        where: { id },
+        select: { id: true, projectId: true, name: true },
+    });
+};
+
 
 export const findMessages = async (conversationId: string, cursor?: string) => {
     return prisma.message.findMany({

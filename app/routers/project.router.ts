@@ -3,6 +3,7 @@ import { protect } from '../middlewares/auth.middleware.js';
 import { verifyEmailMiddleware } from '../middlewares/verified.middleware.js';
 import { requireProjectRole } from '../middlewares/project.middleware.js';
 import { ProjectRole } from '../generated/prisma/enums.js';
+import chatRouter from './chat.router.js';
 import {
     createProjectController,
     createSubProjectController,
@@ -36,5 +37,6 @@ router.get('/:projectId/subprojects', requireProjectRole(ProjectRole.ADMIN, Proj
 
 router.post('/:projectId/subprojects', requireProjectRole(ProjectRole.ADMIN), createSubProjectController);
 router.use('/:projectId/tasks', taskRouter);
+router.use('/:projectId/conversations',chatRouter);
 
 export default router;

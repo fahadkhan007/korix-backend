@@ -5,11 +5,14 @@ import projectRouter from './app/routers/project.router.js';
 import { PORT, FRONTEND_CLIENT_URL } from './app/config/env.js';
 import { connectRedis } from './app/database/redis.js';
 import { connectRedisRateLimit } from './app/config/ratelimitRedis.js';
+import { initSocket } from './app/socket/server.js';
+import { createServer } from 'http';
 import errorMiddleware from './app/middlewares/error.middleware.js';
 import cors from 'cors';
 
 
 const app: Application = express();
+const httpServer = createServer(app);
 const allowedOrigins = (FRONTEND_CLIENT_URL ?? '')
     .split(',')
     .map((origin) => origin.trim())
@@ -137,7 +140,8 @@ const port = Number(PORT) || 8000;
 const startServer = async () => {
     await connectRedis();
     await connectRedisRateLimit();
-    app.listen(port, () => {
+    initSocket(httpServer);
+    httpServer.listen(port, () => {
         console.log(`Server running on http://localhost:${port}`);
     });
 };
