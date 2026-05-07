@@ -1,4 +1,6 @@
 import { configDotenv } from "dotenv";
+import fs from "fs";
+import path from "path"
 configDotenv();
 
 export const {
@@ -14,5 +16,15 @@ export const {
     SMTP_SERVER,
     SMTP_PORT,
     RESEND_API_KEY,
-    RESEND_FROM_EMAIL
+    RESEND_FROM_EMAIL,
+    AI_SERVICE_URL
 } = process.env;
+
+export const PRIVATE_KEY=(()=>{
+    try{
+        return fs.readFileSync(path.join(process.cwd(),"private.pem"),"utf-8");
+    }catch{
+        console.warn("private.pem key NOT found! AI service will not work.");
+        return null;
+    }
+})();

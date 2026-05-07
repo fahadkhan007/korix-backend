@@ -2,7 +2,6 @@ import redisClient from "../database/redis.js";
 
 const redisRateLimit = redisClient.duplicate();
 
-// Start connection immediately to allow command buffering
 const connectionPromise = redisRateLimit.connect().then(() => {
     return redisRateLimit.select(2);
 }).then(() => {
