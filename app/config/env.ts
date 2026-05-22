@@ -21,10 +21,19 @@ export const {
 } = process.env;
 
 export const PRIVATE_KEY=(()=>{
-    try{
-        return fs.readFileSync(path.join(process.cwd(),"private.pem"),"utf-8");
-    }catch{
-        console.warn("private.pem key NOT found! AI service will not work.");
-        return null;
+    // In production (Render), private.pem is mounted as a Secret File
+    // In development, it lives next to the project root
+    const candidates = [
+        "/etc/secrets/private.pem",
+        path.join(process.cwd(), "private.pem"),
+    ];
+    for (const filePath of candidates) {
+        try {
+            return fs.readFileSync(filePath, "utf-8");
+        } catch {
+            // try next candidate
+        }
     }
+    console.warn("private.pem key NOT found! AI service will not work.");
+    return null;
 })();
