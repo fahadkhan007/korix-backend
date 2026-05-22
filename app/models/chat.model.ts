@@ -1,6 +1,8 @@
 import { prisma } from "../database/database.js";
 import { MessageType } from "../generated/prisma/enums.js";
 
+export const AI_BOT_USER_ID = "00000000-0000-0000-0000-000000000000";
+
 export const findConversationByProject = async (projectId: string) => {
     return prisma.conversation.findFirst({
         where: { projectId },
@@ -57,5 +59,17 @@ export const createMessage = async (data: {
                 select: { id: true, name: true, email: true },
             },
         },
+    });
+};
+
+export const createAiMessage = async (data: {
+    conversationId: string,
+    content: string
+}) => {
+    return createMessage({
+        conversationId: data.conversationId,
+        senderId:       AI_BOT_USER_ID,
+        content:        data.content,
+        messageType:    MessageType.AI
     });
 };
