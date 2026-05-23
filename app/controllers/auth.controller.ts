@@ -172,10 +172,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
         const verificationUrl = `${getBackendBaseUrl()}/api/auth/verify-email?token=${emailToken}`;
 
-        res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
+        // NOTE: HTTP-only cookies don't work cross-site (Vercel → Render) due to browser
+        // third-party cookie blocking. We return the refresh token in the response body
+        // and let the frontend store it in localStorage.
         res.status(201).json({
             message: 'Account created successfully',
             accessToken,
+            refreshToken,
             user,
         });
 
@@ -221,16 +224,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         const accessToken = generateAccessToken(user.id);
         const refreshToken = generateRefreshToken(user.id);
 
-
         await redisClient.set(refreshKey(user.id), refreshToken, { EX: 604800 });
-
-        res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
 
         const { password: _, ...userWithoutPassword } = user;
 
+        // NOTE: HTTP-only cookies don't work cross-site (Vercel → Render) due to browser
+        // third-party cookie blocking. We return the refresh token in the response body
+        // and let the frontend store it in localStorage.
         res.status(200).json({
             message: 'Login successful',
             accessToken,
+            refreshToken,
             user: userWithoutPassword,
         });
     } catch (err) {
@@ -241,7 +245,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
 export const refresh = async (req: Request, res: Response): Promise<void> => {
     try {
-        const token = (req.cookies as Record<string, string | undefined>)?.refresh_token;
+        // Accept refresh token from request body (cross-site cookie alternative)
+        const token = req.body?.refreshToken as string | undefined;
 
         if (!token) {
             res.status(401).json({ message: 'No refresh token provided' });
@@ -261,9 +266,8 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
         const newRefreshToken = generateRefreshToken(decoded.userId);
 
         await redisClient.set(refreshKey(decoded.userId), newRefreshToken, { EX: 604800 });
-        res.cookie('refresh_token', newRefreshToken, REFRESH_COOKIE_OPTIONS);
 
-        res.status(200).json({ accessToken: newAccessToken });
+        res.status(200).json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
     } catch (err) {
         console.error('Refresh error:', err);
         res.status(401).json({ message: 'Unauthorized: Invalid or expired refresh token' });
